@@ -25,6 +25,11 @@ The goals / steps of this project are the following:
 [image4]: ./output_images/sobel_thresholds.jpg "Sobel Thresholds"
 [image5]: ./output_images/color_thresholds.jpg "Color Thresholds"
 [image6]: ./output_images/sobels.jpg "Sobel Thresholds"
+[image7]: ./output_images/pipeline.jpg "Pipeline"
+[image8]: ./output_images/histogram.jpg "Histogram"
+[image9]: ./output_images/sliding_window.jpg "Sliding Windows"
+[image10]: ./output_images/polynomial.jpg "Polynomial"
+[image11]: ./output_images/test_images.jpg "Result images"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
 
@@ -58,25 +63,25 @@ The code for my perspective transform includes a function called `warper()`, whi
 ```python
 h,w = undistort.shape[:2]
 
-src = np.float32([(575,464),
-                  (707,464),
-                  (258,682),
-                  (1049,682)])
+src = np.float32([(585,  460),
+                  (697,  460),
+                  (1044, 690 - 20),
+                  (259,  690 - 20)])
 
-dst = np.float32([(450,0),
-                  (img_size[1]-450, 0),
-                  (450,img_size[0],
-                  (img_size[1]-450,img_size[0])])
+dst = np.float32([(320, 0),
+                  (960, 0),
+                  (960, h),
+                  (320, h)])
 ```
 
 This resulted in the following source and destination points:
 
-| Source        | Destination       | 
-|:-------------:|:-----------------:| 
-| 575, 464      | 450,       0      | 
-| 707, 464      | width-450, 0      |
-| 258, 682      | 450,       height |
-| 1049,682      | width-450, height |
+| Source        | Destination |
+|:-------------:|:-----------:|
+| 585, 460      | 320, 0      |
+| 697, 460      | 960, 0      |
+| 1044,670      | 960, height |
+| 259, 670      | 320, height |
 
 I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
 
@@ -89,8 +94,33 @@ Then I did some other stuff and fit my lane lines with a 2nd order polynomial ki
 ![alt text][image4]
 ![alt text][image5]
 
-#### 5. Sobels Thresholding.
+#### 5. Sobels Thresholding
 
 ![alt text][image6]
+![alt text][image7]
 
-#### 6. TODO
+##### 6. Histogram and polynomial
+![alt text][image8]
+![alt text][image9]
+![alt text][image10]
+
+
+### Result
+
+#### 1. Images
+![alt text][image11]
+
+#### 2. Videos
+
+##### Test video
+<img src="samples/video.gif"/>
+
+##### Sliding windows
+<img src="samples/result_sliding.gif"/>
+
+##### Polynomial
+<img src="samples/result_poly.gif"/>
+
+
+##### Final
+<img src="samples/result.gif"/>
