@@ -65,8 +65,8 @@ h,w = undistort.shape[:2]
 
 src = np.float32([(585,  460),
                   (697,  460),
-                  (1044, 690 - 20),
-                  (259,  690 - 20)])
+                  (1044, 690),
+                  (259,  690)])
 
 dst = np.float32([(320, 0),
                   (960, 0),
@@ -80,8 +80,8 @@ This resulted in the following source and destination points:
 |:-------------:|:-----------:|
 | 585, 460      | 320, 0      |
 | 697, 460      | 960, 0      |
-| 1044,670      | 960, height |
-| 259, 670      | 320, height |
+| 1044,690      | 960, height |
+| 259, 690      | 320, height |
 
 I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
 
@@ -122,5 +122,5 @@ Then I did some other stuff and fit my lane lines with a 2nd order polynomial ki
 <img src="samples/result_poly.gif"/>
 
 
-##### Final
+##### Final [solution](https://youtu.be/tcUMo39b0j4)
 <img src="samples/result.gif"/>
