@@ -1,2 +1,2 @@
-# Ignore result videos
-output_videos/*.mp4
+# Ignore result videos; Video need to be uploaded
+# output_videos/*.mp4

@@ -24,7 +24,6 @@ The goals / steps of this project are the following:
 [image3]: ./output_images/unwarped_image.jpg "Unwraped Road Transformed"
 [image4]: ./output_images/sobel_thresholds.jpg "Sobel Thresholds"
 [image5]: ./output_images/color_thresholds.jpg "Color Thresholds"
-[image6]: ./output_images/sobels.jpg "Sobel Thresholds"
 [image7]: ./output_images/pipeline.jpg "Pipeline"
 [image8]: ./output_images/histogram.jpg "Histogram"
 [image9]: ./output_images/sliding_window.jpg "Sliding Windows"
@@ -53,15 +52,15 @@ I then used the output `objpoints` and `imgpoints` to compute the camera calibra
 
 #### 1. Distortion-corrected image.
 
-I have converted image to grayscale, and using data from `wide_dist_pickly.p`, I have recevied Matrix and Destition, and then Undistored image.
+I have converted image to grayscale, calling `cv2.undistort` (in Distort functions cell, function "cal_undistort" using data from `wide_dist_pickly.p`, I have recevied Matrix and Destition, and then Undistored image.
 ![alt text][image2]
 
 #### 2. Unwarped image.
 
-The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
+The code for my perspective transform includes a function called `warper()`,  in the "Distort functions" code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
 
 ```python
-h,w = undistort.shape[:2]
+h,w = undistort.shape[:2] # 1280x720
 
 src = np.float32([(585,  460),
                   (697,  460),
@@ -80,47 +79,150 @@ This resulted in the following source and destination points:
 |:-------------:|:-----------:|
 | 585, 460      | 320, 0      |
 | 697, 460      | 960, 0      |
-| 1044,690      | 960, height |
-| 259, 690      | 320, height |
+| 1044,690      | 960, 720    |
+| 259, 690      | 320, 720    |
 
 I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
 
 ![alt text][image3]
 
-#### 4. Grad binary and RGB, HLS Binary
+#### 3. Gradients and Color Spaces
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+##### Gradients
+
+~~Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:~~
+Functions are stored in "Gradient functions" cell.
+
+Then I processed unwarped image trough Sobel operators; x-gradient, y-gradient and combined xy-gradient.
+Also tried magnitude of gradient (with kernel size 3), direction of gradient (arctan(sobel<sub>y</sub> / sobel<sub>x</sub>)), and combing all thresholding combinations.
+
+```python
+# Kernel size; ksize=3
+gradx      = abs_sobel_thresh(img, orient='x', sobel_kernel=ksize, thresh=(20, 100))
+grady      = abs_sobel_thresh(img, orient='y', sobel_kernel=ksize, thresh=(20, 100))
+mag_binary = mag_thresh(img, sobel_kernel=ksize, mag_thresh=(30, 100))
+dir_binary = dir_threshold(img, sobel_kernel=ksize, thresh=(0, np.pi/2))
+combined   = np.zeros_like(dir_binary)
+combined[((gradx == 1) & (grady == 1)) | ((mag_binary == 1) & (dir_binary == 1))] = 1
+```
 
 ![alt text][image4]
+
+##### Color Thresholding
+
+Functions are stored in "Color functions" cell.
+
+###### RGB
+
+Using unwarped image I have tried many combinations to convert to gray, and Gray binary; then for each color palate, vanilla and binary.
+
+```python
+gray_vanilla = cv2.cvtColor(unwarped, cv2.COLOR_RGB2GRAY)
+# bin_example
+gray_binary  = np.zeros_like(gray_vanilla)
+thresh       = (180, 255)
+gray_binary[(gray_vanilla > thresh[0]) & (gray_vanilla <= thresh[1])] = 1
+
+# R Example (red)
+r_vanilla = unwarped[:,:,0] # 0 -> RED, 1 -> GREEN, 2 -> BLUE
+# bin example
+r_binary  = np.zeros_like(r_vanilla)
+thresh    = (200, 255)
+r_binary[(r_vanilla > thresh[0]) & (r_vanilla <= thresh[1])] = 1
+```
+
+###### HLS
+
+Converted unwraped image from RGB into HLS color space via "cv2.COLOR_RGB2HLS", and same as in RGB looped all scenarios
+
+```python
+# Convert from RGB into HLS colorspace
+hls = cv2.cvtColor(unwarped, cv2.COLOR_RGB2HLS)
+
+# H example (hue)
+h_vanilla = hls[:, :, 0] # 0 -> HUE, 1 -> VA(L)UE, 2 -> SATURATION
+# bin example
+h_binary = np.zeros_like(h_vanilla)
+thresh   = (15, 100)
+h_binary[(h_vanilla > thresh[0]) & (h_vanilla <= thresh[1])] = 1
+```
+
 ![alt text][image5]
 
-#### 5. Sobels Thresholding
+###### Thresholding combined
 
-![alt text][image6]
+Functions are stored in "Pipeline" cell.
+
+* Convert to HLS colorspace
+* Separate L (Value)
+* Take the derative in x
+* Absoulute x derative
+* Threshold x binary -> Combined S channel and gradient treshold(example)
+* Threshold color channel
+* Stack each channel -> Stacked thresholds(example)
+
 ![alt text][image7]
 
-##### 6. Histogram and polynomial
+##### 4. Finding Lines
+Functions are stored in "Finding Lines" cell.
+
+For finding lines I choose binary grayscaled warped image.
+
+###### Histogram
+Steps:
+* Grab only bottom half of image
+* Sum across image pixels vertically, axis set to 0
+* Visuale graph trough matplot plot function (given Line2D array)
 ![alt text][image8]
+
+###### Sliding windows
+Steps:
+* Use histogram (prev. example)
+* Split the histogram into two lines (Left: red, Right: blue)
+* Window and window hyperparameters (sliding windows:9, margin: 100, minimum number of pixels to recent window 50)
 ![alt text][image9]
+
+###### Polynomial
+Steps:
+* Find lane lines
+* Using "np.polyfit" find second order polynomial
+* Generate x, y values for plotting
 ![alt text][image10]
 
+##### 5. Result
+Note: Curvature and offset info are in video only.
 
-### Result
+On test images, using previous steps(as in "Process image" cell, process_image function):
+* Undistort
+* Warp(using same hardcoded src, dest from before)
+* Gray binary
 
-#### 1. Images
+Using "find_lane_pixels" ("Finding the lanes" cell), I got values that are needed for measuring curvature (measure_curvature function in "Draw Lines" cell)
+
+```python
+# Define conversions in x and y from pixels space to meters
+ym_per_pix = 30  / 720 # meters per pixel in y dimension
+xm_per_pix = 3.7 / 700 # meters per pixel in x dimension
+
+# Calculating mid point
+left_mean   = np.mean(leftx)
+right_mean  = np.mean(rightx)
+camera_pos  = (binary.shape[1]/2)-np.mean([left_mean, right_mean])
+dist_offset = np.round(camera_pos*xm_per_pix,2)
+```
+
+Using "cv2.getPerspectiveTransform" I converted to original image, and colored in green space between lines.
+
 ![alt text][image11]
 
-#### 2. Videos
+---
 
-##### Test video
+### Pipeline (Video)
+Using same pipeline as for image examples, with addition of adding curvature and offset info).
+Video is solid, could be better.
+
+#### Project [video](https://github.com/Horki/CarND-Advanced-Lane-Lines/blob/master/project_video.mp4) (sample)
 <img src="samples/video.gif"/>
 
-##### Sliding windows
-<img src="samples/result_sliding.gif"/>
-
-##### Polynomial
-<img src="samples/result_poly.gif"/>
-
-
-##### Final [solution](https://youtu.be/tcUMo39b0j4)
+#### Final [solution](https://github.com/Horki/CarND-Advanced-Lane-Lines/blob/master/output_videos/result.mp4), [YouTube solution](https://youtu.be/tcUMo39b0j4)
 <img src="samples/result.gif"/>
