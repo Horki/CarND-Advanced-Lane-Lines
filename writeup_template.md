@@ -222,7 +222,7 @@ Using same pipeline as for image examples, with addition of adding curvature and
 Video is solid, could be better.
 
 #### Project [video](https://github.com/Horki/CarND-Advanced-Lane-Lines/blob/master/project_video.mp4) (sample)
-<img src="samples/video.gif"/>
+<img src="samples/video.webp"/>
 
 #### Final [solution](https://github.com/Horki/CarND-Advanced-Lane-Lines/blob/master/output_videos/result.mp4), [YouTube solution](https://youtu.be/tcUMo39b0j4)
-<img src="samples/result.gif"/>
+<img src="samples/result.webp"/>
